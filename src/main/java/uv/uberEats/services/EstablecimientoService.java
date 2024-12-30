@@ -20,6 +20,15 @@ public class EstablecimientoService {
         return establecimientoRepository.findAll(Sort.by(Sort.Direction.DESC, "nombre"));
     }
 
+    //Obtener todos por nombre buscado
+    public List<Establecimiento> obtenerPorNombre(String nombre) {
+        if (nombre == null || nombre.isEmpty()) {
+            // En caso de cadena vacía, devuelve todos
+            return obtenerTodos();
+        }
+        return establecimientoRepository.findEstablecimientoByNombre("%" + nombre + "%");
+    }
+
     // Obtener un establecimiento por ID
     public Establecimiento obtenerPorId(Long id) {
         return establecimientoRepository.findById(id)
@@ -29,5 +38,12 @@ public class EstablecimientoService {
     //Agregar un establecimiento
     public Establecimiento agregarEstablecimiento(Establecimiento establecimiento) {
         return establecimientoRepository.save(establecimiento);
+    }
+
+    //Eliminar un establecimiento
+    public Establecimiento eliminarEstablecimiento(Long id) {
+        Establecimiento establecimiento = obtenerPorId(id);
+        establecimientoRepository.delete(establecimiento);
+        return establecimiento;
     }
 }

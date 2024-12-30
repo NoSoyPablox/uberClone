@@ -11,5 +11,6 @@ public interface EstablecimientoRepository extends JpaRepository <Establecimient
     List<Establecimiento> findEstablecimientoByNombre(@Param("nombre") String nombre);
 
     List<Establecimiento> findByNombre(String nombre);*/
-
+    @Query("Select e FROM Establecimiento e WHERE e.nombre like :nombre ORDER BY e.nombre")
+    List<Establecimiento> findEstablecimientoByNombre(@Param("nombre") String nombre);
 }

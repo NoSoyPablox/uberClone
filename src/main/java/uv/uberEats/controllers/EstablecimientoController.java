@@ -11,17 +11,23 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("api/Establecimientos")
+@RequestMapping("api/establecimientos")
 public class EstablecimientoController {
     @Autowired
     EstablecimientoService establecimientoService;
 
     //Obtener todos
+    // Obtener lista de establecimientos con búsqueda opcional por nombre
     @GetMapping
-    public List<Establecimiento> getListaEstablecimientos() {
-        List<Establecimiento> establecimientoList = establecimientoService.obtenerTodos();
-        return establecimientoList;
+    public List<Establecimiento> getListaEstablecimientos(@RequestParam(required = false) String nombre) {
+        // Si no se proporciona un nombre, busca todos
+        if (nombre == null || nombre.isEmpty()) {
+            return establecimientoService.obtenerTodos();
+        }
+        // Si se proporciona un nombre, realiza la búsqueda filtrada
+        return establecimientoService.obtenerPorNombre(nombre);
     }
+
 
     // Buscar uno con ID
     @GetMapping("/{id}")
@@ -53,4 +59,22 @@ public class EstablecimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Código 500 - Server Error
         }
     }
+
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<?> eliminarEstablecimiento(@PathVariable Long id) {
+        try {
+            // Llama al servicio para eliminar el establecimiento
+            Establecimiento eliminado = establecimientoService.eliminarEstablecimiento(id);
+            return ResponseEntity.ok("Establecimiento eliminado: " + eliminado.getNombre());
+        } catch (NoSuchElementException e) {
+            // Si no existe el establecimiento, devuelve 404
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Establecimiento no encontrado con ID: " + id);
+        } catch (Exception e) {
+            // Manejo de errores generales
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor.");
+        }
+    }
+
 }
