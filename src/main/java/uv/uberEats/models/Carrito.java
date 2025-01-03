@@ -1,8 +1,13 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "carrito")
@@ -17,11 +22,17 @@ public class Carrito {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "estado", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private uv.uberEats.models.Estado estado;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario", nullable = false)
+    @JsonBackReference
     private uv.uberEats.models.Usuario usuario;
+
+    @OneToMany(mappedBy = "carrito")
+    @JsonManagedReference
+    private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -53,6 +64,14 @@ public class Carrito {
 
     public void setUsuario(uv.uberEats.models.Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    public Set<uv.uberEats.models.Pedido> getPedidos() {
+        return pedidos;
+    }
+
+    public void setPedidos(Set<uv.uberEats.models.Pedido> pedidos) {
+        this.pedidos = pedidos;
     }
 
 }

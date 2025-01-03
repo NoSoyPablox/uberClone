@@ -46,4 +46,9 @@ public class EstablecimientoService {
         establecimientoRepository.delete(establecimiento);
         return establecimiento;
     }
+
+    //Modificar un establecimiento
+    public Establecimiento actualizarEstablecimiento(Establecimiento establecimiento) {
+        return establecimientoRepository.save(establecimiento);
+    }
 }

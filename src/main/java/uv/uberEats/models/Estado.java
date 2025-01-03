@@ -1,5 +1,6 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.LinkedHashSet;
@@ -17,6 +18,7 @@ public class Estado {
     private String nombre;
 
     @OneToMany(mappedBy = "estado")
+    @JsonBackReference
     private Set<Carrito> carritos = new LinkedHashSet<>();
 
     public Integer getId() {

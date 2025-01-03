@@ -77,4 +77,39 @@ public class EstablecimientoController {
         }
     }
 
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<?> actualizarEstablecimiento(
+            @PathVariable Long id,
+            @RequestBody Establecimiento establecimiento) {
+        try {
+            // Verificar si el establecimiento existe
+            Establecimiento existente = establecimientoService.obtenerPorId(id);
+
+            // Actualizar datos
+            existente.setNombre(establecimiento.getNombre());
+            existente.setCodigoPostal(establecimiento.getCodigoPostal());
+            existente.setNumero(establecimiento.getNumero());
+            existente.setCalle(establecimiento.getCalle());
+            existente.setPais(establecimiento.getPais());
+            existente.setCiudad(establecimiento.getCiudad());
+            existente.setEstado(establecimiento.getEstado());
+            existente.setLatitud(establecimiento.getLatitud());
+            existente.setLongitud(establecimiento.getLongitud());
+
+            // Guardar cambios
+            Establecimiento actualizado = establecimientoService.actualizarEstablecimiento(existente);
+
+            return ResponseEntity.ok(actualizado); // Código 200 - OK
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Establecimiento no encontrado con ID: " + id); // Código 404 - Not Found
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body("Datos inválidos para actualizar el establecimiento."); // Código 400 - Bad Request
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor."); // Código 500 - Server Error
+        }
+    }
+
 }

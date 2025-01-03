@@ -1,5 +1,6 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,6 +19,7 @@ public class Calificacion {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comida", nullable = false)
+    @JsonBackReference
     private uv.uberEats.models.Comida comida;
 
     public Integer getId() {

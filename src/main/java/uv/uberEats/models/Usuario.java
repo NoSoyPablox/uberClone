@@ -1,5 +1,6 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.LinkedHashSet;
@@ -29,6 +30,7 @@ public class Usuario {
     private String contrasenia;
 
     @OneToMany(mappedBy = "usuario")
+    @JsonManagedReference
     private Set<Carrito> carritos = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "usuario")

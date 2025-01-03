@@ -1,5 +1,9 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -26,11 +30,17 @@ public class Comida {
     @Column(name = "imagen", nullable = false)
     private byte[] imagen;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "establecimiento", nullable = false)
+    @JsonBackReference
+    private uv.uberEats.models.Establecimiento establecimiento;
+
     @OneToMany(mappedBy = "comida")
+    @JsonManagedReference
     private Set<Calificacion> calificacions = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "comida")
-    private Set<uv.uberEats.models.ComidaEstablecimiento> comidaEstablecimientos = new LinkedHashSet<>();
+    private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -72,6 +82,14 @@ public class Comida {
         this.imagen = imagen;
     }
 
+    public uv.uberEats.models.Establecimiento getEstablecimiento() {
+        return establecimiento;
+    }
+
+    public void setEstablecimiento(uv.uberEats.models.Establecimiento establecimiento) {
+        this.establecimiento = establecimiento;
+    }
+
     public Set<Calificacion> getCalificacions() {
         return calificacions;
     }
@@ -80,12 +98,12 @@ public class Comida {
         this.calificacions = calificacions;
     }
 
-    public Set<uv.uberEats.models.ComidaEstablecimiento> getComidaEstablecimientos() {
-        return comidaEstablecimientos;
+    public Set<uv.uberEats.models.Pedido> getPedidos() {
+        return pedidos;
     }
 
-    public void setComidaEstablecimientos(Set<uv.uberEats.models.ComidaEstablecimiento> comidaEstablecimientos) {
-        this.comidaEstablecimientos = comidaEstablecimientos;
+    public void setPedidos(Set<uv.uberEats.models.Pedido> pedidos) {
+        this.pedidos = pedidos;
     }
 
 }

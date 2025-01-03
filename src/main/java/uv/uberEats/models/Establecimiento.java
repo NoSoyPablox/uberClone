@@ -1,5 +1,8 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -42,7 +45,8 @@ public class Establecimiento {
     private BigDecimal longitud;
 
     @OneToMany(mappedBy = "establecimiento")
-    private Set<ComidaEstablecimiento> comidaEstablecimientos = new LinkedHashSet<>();
+    @JsonManagedReference
+    private Set<Comida> comidas = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -124,12 +128,12 @@ public class Establecimiento {
         this.longitud = longitud;
     }
 
-    public Set<ComidaEstablecimiento> getComidaEstablecimientos() {
-        return comidaEstablecimientos;
+    public Set<Comida> getComidas() {
+        return comidas;
     }
 
-    public void setComidaEstablecimientos(Set<ComidaEstablecimiento> comidaEstablecimientos) {
-        this.comidaEstablecimientos = comidaEstablecimientos;
+    public void setComidas(Set<Comida> comidas) {
+        this.comidas = comidas;
     }
 
 }
