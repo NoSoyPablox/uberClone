@@ -96,8 +96,4 @@ public class Usuario {
         return usuarioTipoUsuarios;
     }
 
-    public void setUsuarioTipoUsuarios(Set<uv.uberEats.models.UsuarioTipoUsuario> usuarioTipoUsuarios) {
-        this.usuarioTipoUsuarios = usuarioTipoUsuarios;
-    }
-
 }
