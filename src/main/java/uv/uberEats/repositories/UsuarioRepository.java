@@ -8,6 +8,9 @@ import uv.uberEats.models.Usuario;
 import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
-    @Query("SELECT u FROM Usuario u WHERE u.correo = :correo AND u.contrasenia = :contrasenia")
-    Optional<Usuario> validateUsuario(@Param("correo") String correo, @Param("contrasenia") String contrasenia);
+    @Query("SELECT u FROM Usuario u WHERE u.correo = :correo")
+    Optional<Usuario> validateUsuario(@Param("correo") String correo);
+
+    @Query("SELECT u FROM Usuario u WHERE u.correo = :correo")
+    Optional<Usuario> findByCorreo(@Param("correo") String correo);
 }

@@ -1,14 +1,18 @@
 package uv.uberEats.models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
 @Table(name = "usuario")
-public class Usuario {
+public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario", nullable = false)
@@ -29,12 +33,12 @@ public class Usuario {
     @Column(name = "contrasenia", nullable = false, length = 100)
     private String contrasenia;
 
-    @OneToMany(mappedBy = "usuario")
-    @JsonManagedReference
-    private Set<Carrito> carritos = new LinkedHashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tipo_usuario", nullable = false)
+    private TipoUsuario tipoUsuario;
 
     @OneToMany(mappedBy = "usuario")
-    private Set<uv.uberEats.models.UsuarioTipoUsuario> usuarioTipoUsuarios = new LinkedHashSet<>();
+    private Set<Carrito> carritos = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -84,6 +88,14 @@ public class Usuario {
         this.contrasenia = contrasenia;
     }
 
+    public TipoUsuario getTipoUsuario() {
+        return tipoUsuario;
+    }
+
+    public void setTipoUsuario(TipoUsuario tipoUsuario) {
+        this.tipoUsuario = tipoUsuario;
+    }
+
     public Set<Carrito> getCarritos() {
         return carritos;
     }
@@ -92,8 +104,38 @@ public class Usuario {
         this.carritos = carritos;
     }
 
-    public Set<uv.uberEats.models.UsuarioTipoUsuario> getUsuarioTipoUsuarios() {
-        return usuarioTipoUsuarios;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + tipoUsuario.getTipo()));
     }
 
+    @Override
+    public String getPassword() {
+        return contrasenia;
+    }
+
+    @Override
+    public String getUsername() {
+        return correo;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
 }

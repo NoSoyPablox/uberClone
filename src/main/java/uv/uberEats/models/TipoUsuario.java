@@ -17,7 +17,7 @@ public class TipoUsuario {
     private String tipo;
 
     @OneToMany(mappedBy = "tipoUsuario")
-    private Set<uv.uberEats.models.UsuarioTipoUsuario> usuarioTipoUsuarios = new LinkedHashSet<>();
+    private Set<uv.uberEats.models.Usuario> usuarios = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -35,12 +35,12 @@ public class TipoUsuario {
         this.tipo = tipo;
     }
 
-    public Set<uv.uberEats.models.UsuarioTipoUsuario> getUsuarioTipoUsuarios() {
-        return usuarioTipoUsuarios;
+    public Set<uv.uberEats.models.Usuario> getUsuarios() {
+        return usuarios;
     }
 
-    public void setUsuarioTipoUsuarios(Set<uv.uberEats.models.UsuarioTipoUsuario> usuarioTipoUsuarios) {
-        this.usuarioTipoUsuarios = usuarioTipoUsuarios;
+    public void setUsuarios(Set<uv.uberEats.models.Usuario> usuarios) {
+        this.usuarios = usuarios;
     }
 
 }

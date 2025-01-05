@@ -1,9 +1,7 @@
 package uv.uberEats.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "pedido")
@@ -18,23 +16,12 @@ public class Pedido {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "carrito", nullable = false)
-    @JsonBackReference
     private Carrito carrito;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comida", nullable = false)
-    @JsonBackReference
+    @JsonManagedReference
     private Comida comida;
-
-    @Transient
-    private BigDecimal precioParcial;
-
-    public BigDecimal getPrecioParcial() {
-        if (comida != null && cantidad != null) {
-            return comida.getPrecio().multiply(BigDecimal.valueOf(cantidad));
-        }
-        return BigDecimal.ZERO; // En caso de error
-    }
 
     public Integer getId() {
         return id;

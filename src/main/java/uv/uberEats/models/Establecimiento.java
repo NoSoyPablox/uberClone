@@ -1,8 +1,7 @@
 package uv.uberEats.models;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -46,6 +45,7 @@ public class Establecimiento {
 
     @OneToMany(mappedBy = "establecimiento")
     @JsonManagedReference
+    @JsonIgnore
     private Set<Comida> comidas = new LinkedHashSet<>();
 
     public Integer getId() {

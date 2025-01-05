@@ -1,8 +1,5 @@
 package uv.uberEats.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -22,16 +19,19 @@ public class Carrito {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "estado", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private uv.uberEats.models.Estado estado;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario", nullable = false)
-    @JsonBackReference
     private uv.uberEats.models.Usuario usuario;
 
+    @Column(name = "latitud", nullable = false, precision = 10, scale = 8)
+    private BigDecimal latitud;
+
+    @Column(name = "longitud", nullable = false, precision = 11, scale = 8)
+    private BigDecimal longitud;
+
     @OneToMany(mappedBy = "carrito")
-    @JsonManagedReference
     private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
 
     public Integer getId() {
@@ -64,6 +64,22 @@ public class Carrito {
 
     public void setUsuario(uv.uberEats.models.Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    public BigDecimal getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(BigDecimal latitud) {
+        this.latitud = latitud;
+    }
+
+    public BigDecimal getLongitud() {
+        return longitud;
+    }
+
+    public void setLongitud(BigDecimal longitud) {
+        this.longitud = longitud;
     }
 
     public Set<uv.uberEats.models.Pedido> getPedidos() {
