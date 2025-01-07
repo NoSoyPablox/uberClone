@@ -40,6 +40,10 @@ public class CarritoService {
 
         nuevoCarrito.setUsuario(usuario);
         nuevoCarrito.setPrecioTotal(BigDecimal.ZERO);
+        BigDecimal coordenadas = new BigDecimal("00.0000");
+        nuevoCarrito.setLatitud(coordenadas);
+        nuevoCarrito.setLongitud(coordenadas);
+
 
         // Buscar estado 'Activo'
         Estado estadoActivo = estadoRepository.findByNombre("Activo")

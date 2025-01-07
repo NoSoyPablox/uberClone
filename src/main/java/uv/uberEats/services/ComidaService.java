@@ -3,41 +3,75 @@ package uv.uberEats.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import uv.uberEats.dtos.ComidaResponseDTO;
 import uv.uberEats.models.Comida;
+import uv.uberEats.repositories.CalificacionRepository;
 import uv.uberEats.repositories.ComidaRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class ComidaService {
 
     @Autowired
     ComidaRepository comidaRepository;
+    @Autowired
+    CalificacionRepository calificacionRepository;
 
-    //Obtener todos los establecimientos por nombre descendente ABC
-    public List<Comida> obtenerTodasLasComida(){
-        return comidaRepository.findAll(Sort.by(Sort.Direction.DESC,"nombre"));
+    // Obtener todas las comidas
+    public List<ComidaResponseDTO> obtenerTodasLasComida() {
+        List<Comida> comidas = comidaRepository.findAll(Sort.by(Sort.Direction.DESC, "nombre"));
+        return mapToComidaResponseDTO(comidas);
     }
 
-    //Obtener todos por nombre buscado
-    public List<Comida> obtenerComidasPorNombre(String nombre){
-        if (nombre == null || nombre.isEmpty()){
+    // Obtener comidas por nombre
+    public List<ComidaResponseDTO> obtenerComidasPorNombre(String nombre) {
+        if (nombre == null || nombre.isEmpty()) {
             return obtenerTodasLasComida();
         }
-        return comidaRepository.findComidasByNombre("%" + nombre + "%");
+        List<Comida> comidas = comidaRepository.findComidasByNombre("%" + nombre + "%");
+        return mapToComidaResponseDTO(comidas);
     }
 
-    //Obtener comida por ID
-    public Comida obtenerComidaPorId(Integer id){
-        return comidaRepository.findById(id)
+    // Obtener comida por ID
+    public ComidaResponseDTO obtenerComidaPorId(Integer id) {
+        Comida comida = comidaRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Comida no encontrada con ID: " + id));
-
+        return mapToComidaResponseDTO(comida);
     }
 
-    //obtener comida por establecimiento
-    public List<Comida> obtenerComidasPorEstablecimiento(Long idEstablecimiento) {
-        return comidaRepository.findByEstablecimientoId(idEstablecimiento);
+    // Obtener comidas por establecimiento
+    public List<ComidaResponseDTO> obtenerComidasPorEstablecimiento(Long idEstablecimiento) {
+        List<Comida> comidas = comidaRepository.findByEstablecimientoId(idEstablecimiento);
+        return mapToComidaResponseDTO(comidas);
+    }
+
+    // Método para mapear de Comida a ComidaResponseDTO
+    private ComidaResponseDTO mapToComidaResponseDTO(Comida comida) {
+        Integer establecimientoId = comida.getEstablecimiento() != null ? comida.getEstablecimiento().getId() : null;
+        String establecimientoNombre = comida.getEstablecimiento() != null ? comida.getEstablecimiento().getNombre() : null;
+
+        // Obtener el conteo de calificaciones y el promedio
+        Long conteoDeCalificaciones = obtenerConteoDeCalificaciones(comida.getId());
+        Double promedioDeCalificaciones = obtenerPromedioDeCalificaciones(comida.getId());
+
+        return new ComidaResponseDTO(
+                comida.getId(),
+                comida.getNombre(),
+                comida.getPrecio(),
+                comida.getDescripcion(),
+                comida.getImagen(),
+                promedioDeCalificaciones,
+                conteoDeCalificaciones
+        );
+    }
+
+    private List<ComidaResponseDTO> mapToComidaResponseDTO(List<Comida> comidas) {
+        return comidas.stream()
+                .map(this::mapToComidaResponseDTO)
+                .collect(Collectors.toList());
     }
 
     //Crear comida
@@ -67,4 +101,16 @@ public class ComidaService {
         // Guardar la comida actualizada
         return comidaRepository.save(comidaExistente);
     }
+
+    // Método para obtener el conteo de calificaciones de una comida
+    public Long obtenerConteoDeCalificaciones(Integer comidaId) {
+        return calificacionRepository.countByComidaId(comidaId);  // Usamos el método de conteo
+    }
+
+    // Método para obtener el promedio de calificaciones de una comida
+    public Double obtenerPromedioDeCalificaciones(Integer comidaId) {
+        return calificacionRepository.promedioDeCalificaciones(comidaId);  // Usamos el método de promedio
+    }
+
+
 }

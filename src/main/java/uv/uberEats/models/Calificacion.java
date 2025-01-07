@@ -19,7 +19,7 @@ public class Calificacion {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comida", nullable = false)
-    @JsonBackReference
+    @JsonBackReference(value = "comida-calificacion")
     private uv.uberEats.models.Comida comida;
 
     public Integer getId() {

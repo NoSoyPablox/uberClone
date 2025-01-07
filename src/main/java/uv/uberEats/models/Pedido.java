@@ -1,5 +1,6 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -16,11 +17,12 @@ public class Pedido {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "carrito", nullable = false)
+    @JsonBackReference
     private Carrito carrito;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comida", nullable = false)
-    @JsonManagedReference
+    @JsonBackReference(value = "comida-pedido")
     private Comida comida;
 
     public Integer getId() {

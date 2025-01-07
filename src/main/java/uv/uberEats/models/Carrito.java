@@ -1,5 +1,6 @@
 package uv.uberEats.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class Carrito {
     private BigDecimal longitud;
 
     @OneToMany(mappedBy = "carrito")
+    @JsonManagedReference
     private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
 
     public Integer getId() {

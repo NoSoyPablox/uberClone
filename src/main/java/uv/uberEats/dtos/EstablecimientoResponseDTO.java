@@ -1,54 +1,46 @@
-package uv.uberEats.models;
+package uv.uberEats.dtos;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import jakarta.persistence.*;
+import uv.uberEats.models.Establecimiento;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "establecimiento")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Establecimiento {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_establecimiento", nullable = false)
+public class EstablecimientoResponseDTO {
     private Integer id;
-
-    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
-
-    @Column(name = "codigo_postal", nullable = false, length = 5)
     private String codigoPostal;
-
-    @Column(name = "numero", nullable = false)
     private Integer numero;
-
-    @Column(name = "calle", nullable = false, length = 100)
     private String calle;
-
-    @Column(name = "pais", nullable = false, length = 100)
     private String pais;
-
-    @Column(name = "ciudad", nullable = false, length = 100)
     private String ciudad;
-
-    @Column(name = "estado", nullable = false, length = 100)
     private String estado;
-
-    @Column(name = "latitud", nullable = false, precision = 10, scale = 8)
     private BigDecimal latitud;
-
-    @Column(name = "longitud", nullable = false, precision = 11, scale = 8)
     private BigDecimal longitud;
 
-    @OneToMany(mappedBy = "establecimiento")
-    @JsonManagedReference
-    private Set<Comida> comidas = new LinkedHashSet<>();
+    public EstablecimientoResponseDTO(Integer id, String nombre, String codigoPostal, Integer numero, String calle, String pais, String ciudad, String estado, BigDecimal latitud, BigDecimal longitud) {
+        this.id = id;
+        this.nombre = nombre;
+        this.codigoPostal = codigoPostal;
+        this.numero = numero;
+        this.calle = calle;
+        this.pais = pais;
+        this.ciudad = ciudad;
+        this.estado = estado;
+        this.latitud = latitud;
+        this.longitud = longitud;
+    }
+
+    public EstablecimientoResponseDTO(Establecimiento establecimiento) {
+        this.id = establecimiento.getId().intValue(); // Asumiendo que el ID es Long, lo convertimos a Integer
+        this.nombre = establecimiento.getNombre();
+        this.codigoPostal = establecimiento.getCodigoPostal();
+        this.numero = establecimiento.getNumero();
+        this.calle = establecimiento.getCalle();
+        this.pais = establecimiento.getPais();
+        this.ciudad = establecimiento.getCiudad();
+        this.estado = establecimiento.getEstado();
+        this.latitud = establecimiento.getLatitud();
+        this.longitud = establecimiento.getLongitud();
+    }
 
     public Integer getId() {
         return id;
@@ -129,13 +121,4 @@ public class Establecimiento {
     public void setLongitud(BigDecimal longitud) {
         this.longitud = longitud;
     }
-
-    public Set<Comida> getComidas() {
-        return comidas;
-    }
-
-    public void setComidas(Set<Comida> comidas) {
-        this.comidas = comidas;
-    }
-
 }

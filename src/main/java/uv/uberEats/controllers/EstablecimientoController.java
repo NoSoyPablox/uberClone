@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import uv.uberEats.dtos.EstablecimientoResponseDTO;
 import uv.uberEats.models.Establecimiento;
 import uv.uberEats.services.EstablecimientoService;
 
@@ -19,12 +20,10 @@ public class EstablecimientoController {
     //Obtener todos
     // Obtener lista de establecimientos con búsqueda opcional por nombre
     @GetMapping
-    public List<Establecimiento> getListaEstablecimientos(@RequestParam(required = false) String nombre) {
-        // Si no se proporciona un nombre, busca todos
+    public List<EstablecimientoResponseDTO> getListaEstablecimientos(@RequestParam(required = false) String nombre) {
         if (nombre == null || nombre.isEmpty()) {
             return establecimientoService.obtenerTodos();
         }
-        // Si se proporciona un nombre, realiza la búsqueda filtrada
         return establecimientoService.obtenerPorNombre(nombre);
     }
 

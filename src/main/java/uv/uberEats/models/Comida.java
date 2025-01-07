@@ -34,11 +34,11 @@ public class Comida {
     private uv.uberEats.models.Establecimiento establecimiento;
 
     @OneToMany(mappedBy = "comida")
-    @JsonManagedReference
+    @JsonManagedReference(value = "comida-calificacion")
     private Set<Calificacion> calificacions = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "comida")
-    @JsonBackReference
+    @JsonManagedReference(value = "comida-pedido")
     private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
 
     public Integer getId() {

@@ -4,13 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import uv.uberEats.dtos.CarritoResponseDTO;
+import uv.uberEats.dtos.PedidoResponseDTO;
 import uv.uberEats.models.Carrito;
 import uv.uberEats.models.Pedido;
 import uv.uberEats.services.CarritoService;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("api/carritos")
@@ -19,32 +19,41 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
-    // Obtener el carrito activo del usuario
-    @GetMapping("/activo/{usuarioId}")
+    @GetMapping("activo/{usuarioId}")
     public ResponseEntity<?> obtenerCarritoActivo(@PathVariable Integer usuarioId) {
         try {
-            // Buscar el carrito activo del usuario
-            Optional<Carrito> carritoActivo = carritoService.obtenerCarritoActivoPorUsuario(usuarioId);
-
-            // Si no existe carrito activo, crear uno nuevo
-            if (carritoActivo.isEmpty()) {
-                Carrito nuevoCarrito = carritoService.crearCarrito(usuarioId);
-                return ResponseEntity.status(HttpStatus.CREATED).body(nuevoCarrito); // Crear y devolver carrito
+            // Verificar el carrito antes de lanzar la excepción
+            Optional<Carrito> carritoOpt = carritoService.obtenerCarritoActivoPorUsuario(usuarioId);
+            if (carritoOpt.isEmpty()) {
+                // Si el carrito no se encuentra, responder con 404
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No se encontró un carrito activo para el usuario con ID: " + usuarioId);
             }
 
-            // Si ya existe un carrito activo, devolverlo
-            return ResponseEntity.ok(carritoActivo.get());
+            Carrito carrito = carritoOpt.get();
+            // Mapear la información a CarritoConPedidosDTO
+            CarritoResponseDTO carritoDTO = new CarritoResponseDTO();
+            carritoDTO.setId(carrito.getId());
+            carritoDTO.setPrecioTotal(carrito.getPrecioTotal());
+            carritoDTO.setEstadoNombre(carrito.getEstado().getNombre());
+            carritoDTO.setUsuarioId(carrito.getUsuario().getId());
 
-        } catch (RuntimeException e) {
-            // Manejar excepción si el usuario no existe
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario no encontrado con ID: " + usuarioId);
+            List<PedidoResponseDTO> pedidosDTO = new ArrayList<>();
+            for (Pedido pedido : carrito.getPedidos()) {
+                PedidoResponseDTO pedidoDTO = new PedidoResponseDTO();
+                pedidoDTO.setComidaId(pedido.getComida().getId());
+                pedidoDTO.setCantidad(pedido.getCantidad());
+                pedidosDTO.add(pedidoDTO);
+            }
+            carritoDTO.setPedidos(pedidosDTO);
+
+            return ResponseEntity.ok(carritoDTO);
         } catch (Exception e) {
-            // Manejar errores inesperados
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor.");
+                    .body("Error al obtener el carrito activo.");
         }
     }
+
 
     //Agregar un pedido al carrito
     @PostMapping("/{carritoId}/agregar-pedido")
