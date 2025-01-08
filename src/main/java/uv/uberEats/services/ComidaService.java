@@ -5,9 +5,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uv.uberEats.dtos.ComidaResponseDTO;
 import uv.uberEats.models.Comida;
+import uv.uberEats.models.Establecimiento;
 import uv.uberEats.repositories.CalificacionRepository;
 import uv.uberEats.repositories.ComidaRepository;
+import uv.uberEats.repositories.EstablecimientoRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -19,6 +22,8 @@ public class ComidaService {
     ComidaRepository comidaRepository;
     @Autowired
     CalificacionRepository calificacionRepository;
+    @Autowired
+    EstablecimientoRepository establecimientoRepository;
 
     // Obtener todas las comidas
     public List<ComidaResponseDTO> obtenerTodasLasComida() {
@@ -43,7 +48,7 @@ public class ComidaService {
     }
 
     // Obtener comidas por establecimiento
-    public List<ComidaResponseDTO> obtenerComidasPorEstablecimiento(Long idEstablecimiento) {
+    public List<ComidaResponseDTO> obtenerComidasPorEstablecimiento(Integer idEstablecimiento) {
         List<Comida> comidas = comidaRepository.findByEstablecimientoId(idEstablecimiento);
         return mapToComidaResponseDTO(comidas);
     }
@@ -64,7 +69,9 @@ public class ComidaService {
                 comida.getDescripcion(),
                 comida.getImagen(),
                 promedioDeCalificaciones,
-                conteoDeCalificaciones
+                conteoDeCalificaciones,
+                establecimientoId,
+                establecimientoNombre
         );
     }
 
@@ -75,9 +82,31 @@ public class ComidaService {
     }
 
     //Crear comida
-    public Comida crearComida(Comida comida){
-        return comidaRepository.save(comida);
+    public ComidaResponseDTO crearComida(String nombre, String precio, String descripcion, Integer establecimientoId, byte[] imagenBytes) {
+        // Convertir el precio de String a BigDecimal
+        BigDecimal precioDecimal = new BigDecimal(precio);
+
+        // Crear el objeto comida
+        Comida nuevaComida = new Comida();
+        nuevaComida.setNombre(nombre);
+        nuevaComida.setPrecio(precioDecimal);
+        nuevaComida.setDescripcion(descripcion);
+
+        // Obtener el establecimiento relacionado
+        Establecimiento establecimiento = establecimientoRepository.findById(establecimientoId)
+                .orElseThrow(() -> new RuntimeException("Establecimiento no encontrado"));
+
+        nuevaComida.setEstablecimiento(establecimiento); // Asegúrate de configurar correctamente el establecimiento
+        nuevaComida.setImagen(imagenBytes); // Establecer la imagen
+
+        // Guardar la comida en la base de datos
+        Comida comidaGuardada = comidaRepository.save(nuevaComida);
+
+        // Mapear la comida guardada a un ComidaResponseDTO y devolverlo
+        return mapToComidaResponseDTO(comidaGuardada);
     }
+
+
 
     // Eliminar comida por ID
     public void eliminarComida(Integer id) {
@@ -87,20 +116,36 @@ public class ComidaService {
     }
 
     // Actualizar comida por ID
-    public Comida actualizarComida(Integer id, Comida comidaActualizada) {
+    public ComidaResponseDTO actualizarComida(Integer id, String nombre, String precio, String descripcion, Integer establecimientoId, byte[] imagenBytes) {
         Comida comidaExistente = comidaRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Comida no encontrada con ID: " + id));
 
-        // Actualizar los atributos de la comida existente con los valores de la comida actualizada
-        comidaExistente.setNombre(comidaActualizada.getNombre());
-        comidaExistente.setPrecio(comidaActualizada.getPrecio());
-        comidaExistente.setDescripcion(comidaActualizada.getDescripcion());
-        comidaExistente.setImagen(comidaActualizada.getImagen());
-        comidaExistente.setEstablecimiento(comidaActualizada.getEstablecimiento());
+        // Actualizar los atributos de la comida existente con los valores proporcionados
+        if (nombre != null) {
+            comidaExistente.setNombre(nombre);
+        }
+        if (precio != null) {
+            comidaExistente.setPrecio(new BigDecimal(precio));
+        }
+        if (descripcion != null) {
+            comidaExistente.setDescripcion(descripcion);
+        }
+        if (establecimientoId != null) {
+            Establecimiento establecimiento = establecimientoRepository.findById(establecimientoId)
+                    .orElseThrow(() -> new RuntimeException("Establecimiento no encontrado"));
+            comidaExistente.setEstablecimiento(establecimiento);
+        }
+        if (imagenBytes != null) {
+            comidaExistente.setImagen(imagenBytes);
+        }
 
         // Guardar la comida actualizada
-        return comidaRepository.save(comidaExistente);
+        comidaRepository.save(comidaExistente);
+
+        // Mapear la comida actualizada a un ComidaResponseDTO y devolverlo
+        return mapToComidaResponseDTO(comidaExistente);
     }
+
 
     // Método para obtener el conteo de calificaciones de una comida
     public Long obtenerConteoDeCalificaciones(Integer comidaId) {

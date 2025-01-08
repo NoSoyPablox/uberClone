@@ -14,6 +14,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/carritos")
 public class EstadoController {
+    //Solo uso interno
     @Autowired
     EstadoService estadoService;
 

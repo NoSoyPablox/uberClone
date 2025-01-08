@@ -120,12 +120,6 @@ public class CarritoService {
         pedido.setCantidad(nuevaCantidad);
         pedidoRepository.save(pedido);
 
-        // Recalcular el precio total del carrito
-        BigDecimal nuevoTotal = carrito.getPedidos().stream()
-                .map(p -> p.getComida().getPrecio().multiply(new BigDecimal(p.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        carrito.setPrecioTotal(nuevoTotal);
         return carritoRepository.save(carrito); // Guardar los cambios
     }
 

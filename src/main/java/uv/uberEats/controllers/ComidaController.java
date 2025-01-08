@@ -50,7 +50,7 @@ public class ComidaController {
 
     // Obtener comida por establecimiento dado su Id
     @GetMapping("/establecimiento/{id}")
-    public ResponseEntity<?> getComidasPorEstablecimiento(@PathVariable Long id) {
+    public ResponseEntity<?> getComidasPorEstablecimiento(@PathVariable Integer id) {
         try {
             // Buscar comidas por ID del establecimiento
             List<ComidaResponseDTO> comidas = comidaService.obtenerComidasPorEstablecimiento(id);
@@ -82,19 +82,11 @@ public class ComidaController {
         try {
             // Convertir la imagen a un arreglo de bytes
             byte[] imagenBytes = imagen.getBytes();
-            // Crear el objeto comida
-            Comida nuevaComida = new Comida();
-            nuevaComida.setNombre(nombre);
-            nuevaComida.setPrecio(new BigDecimal(precio));
-            nuevaComida.setDescripcion(descripcion);
-            Establecimiento establecimiento = new Establecimiento();
-            establecimiento.setId(establecimientoId);
-            nuevaComida.setEstablecimiento(establecimiento); // Asegúrate de configurar correctamente el establecimiento
-            nuevaComida.setImagen(imagenBytes); // Establecer la imagen
 
-            // Guardar la comida en la base de datos
-            Comida comidaGuardada = comidaService.crearComida(nuevaComida);
-            return ResponseEntity.status(HttpStatus.CREATED).body(comidaGuardada);
+            // Llamar al servicio para crear la comida y obtener el DTO de respuesta
+            ComidaResponseDTO comidaResponse = comidaService.crearComida(nombre, precio, descripcion, establecimientoId, imagenBytes);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(comidaResponse);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error al procesar la imagen.");
@@ -103,6 +95,7 @@ public class ComidaController {
                     .body("Error interno del servidor.");
         }
     }
+
 
 
     @DeleteMapping("/{id}")
@@ -120,20 +113,34 @@ public class ComidaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarComida(@PathVariable Integer id, @RequestBody Comida comidaActualizada) {
+    public ResponseEntity<?> actualizarComida(@PathVariable Integer id,
+                                              @RequestParam(value = "nombre", required = false) String nombre,
+                                              @RequestParam(value = "precio", required = false) String precio,
+                                              @RequestParam(value = "descripcion", required = false) String descripcion,
+                                              @RequestParam(value = "establecimientoId", required = false) Integer establecimientoId,
+                                              @RequestParam(value = "imagen", required = false) MultipartFile imagen) {
         try {
-            // Actualizar la comida usando el servicio
-            Comida comida = comidaService.actualizarComida(id, comidaActualizada);
-            return ResponseEntity.ok(comida);
+            // Convertir la imagen a un arreglo de bytes si se proporciona
+            byte[] imagenBytes = null;
+            if (imagen != null) {
+                imagenBytes = imagen.getBytes();
+            }
+
+            // Llamar al servicio para actualizar la comida y pasar la imagen si existe
+            ComidaResponseDTO comidaResponse = comidaService.actualizarComida(id, nombre, precio, descripcion, establecimientoId, imagenBytes);
+
+            return ResponseEntity.ok(comidaResponse);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error al procesar la imagen.");
         } catch (NoSuchElementException e) {
-            // Manejar si no se encuentra la comida
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Comida no encontrada con ID: " + id);
         } catch (Exception e) {
-            // Manejar otros errores
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor.");
         }
     }
+
 
 }

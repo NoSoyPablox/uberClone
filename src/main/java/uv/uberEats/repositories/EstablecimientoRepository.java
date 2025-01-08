@@ -6,7 +6,7 @@ import uv.uberEats.models.Establecimiento;
 
 import java.util.List;
 
-public interface EstablecimientoRepository extends JpaRepository <Establecimiento, Long> {
+public interface EstablecimientoRepository extends JpaRepository <Establecimiento, Integer> {
     /*@Query("SELECT e FROM Establecimiento e WHERE e.nombre = :nombre")
     List<Establecimiento> findEstablecimientoByNombre(@Param("nombre") String nombre);
 

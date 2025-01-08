@@ -12,5 +12,5 @@ public interface ComidaRepository extends JpaRepository<Comida, Integer> {
     List<Comida> findComidasByNombre(@Param("nombre") String nombre);
 
     @Query("SELECT c FROM Comida c WHERE c.establecimiento.id = :idEstablecimiento ORDER BY c.nombre")
-    List<Comida> findByEstablecimientoId(@Param("idEstablecimiento") Long idEstablecimiento);
+    List<Comida> findByEstablecimientoId(@Param("idEstablecimiento") Integer idEstablecimiento);
 }

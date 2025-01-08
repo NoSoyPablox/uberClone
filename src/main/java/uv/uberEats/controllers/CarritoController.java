@@ -5,10 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uv.uberEats.dtos.CarritoResponseDTO;
+import uv.uberEats.dtos.ComidaResponseDTO;
 import uv.uberEats.dtos.PedidoResponseDTO;
-import uv.uberEats.models.Carrito;
-import uv.uberEats.models.Pedido;
+import uv.uberEats.models.*;
 import uv.uberEats.services.CarritoService;
+import uv.uberEats.services.ComidaService;
+import uv.uberEats.services.UsuarioService;
 
 import java.util.*;
 
@@ -18,39 +20,63 @@ public class CarritoController {
 
     @Autowired
     private CarritoService carritoService;
+    @Autowired
+    private UsuarioService usuarioService;
+    @Autowired
+    private ComidaService comidaService;
 
+
+    //Obtener el carrito del usuario Activo
     @GetMapping("activo/{usuarioId}")
     public ResponseEntity<?> obtenerCarritoActivo(@PathVariable Integer usuarioId) {
         try {
-            // Verificar el carrito antes de lanzar la excepción
+            // Verificar si existe un carrito activo para el usuario
             Optional<Carrito> carritoOpt = carritoService.obtenerCarritoActivoPorUsuario(usuarioId);
+
+            Carrito carrito;
+            boolean creado = false; // Bandera para verificar si se creó un nuevo carrito
+
             if (carritoOpt.isEmpty()) {
-                // Si el carrito no se encuentra, responder con 404
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No se encontró un carrito activo para el usuario con ID: " + usuarioId);
+                // Si no existe, intentar crearlo
+                carrito = carritoService.crearCarrito(usuarioId);
+                creado = true; // Marcar que se creó un carrito
+            } else {
+                // Si ya existe, obtenerlo
+                carrito = carritoOpt.get();
             }
 
-            Carrito carrito = carritoOpt.get();
-            // Mapear la información a CarritoConPedidosDTO
+            // Mapear la información a CarritoResponseDTO
             CarritoResponseDTO carritoDTO = new CarritoResponseDTO();
             carritoDTO.setId(carrito.getId());
             carritoDTO.setPrecioTotal(carrito.getPrecioTotal());
             carritoDTO.setEstadoNombre(carrito.getEstado().getNombre());
             carritoDTO.setUsuarioId(carrito.getUsuario().getId());
 
+            // Mapear los pedidos asociados al carrito
             List<PedidoResponseDTO> pedidosDTO = new ArrayList<>();
             for (Pedido pedido : carrito.getPedidos()) {
                 PedidoResponseDTO pedidoDTO = new PedidoResponseDTO();
+                pedidoDTO.setCarritoId(carrito.getId());
                 pedidoDTO.setComidaId(pedido.getComida().getId());
                 pedidoDTO.setCantidad(pedido.getCantidad());
+                pedidoDTO.setComidaNombre(pedido.getComida().getNombre());
+                pedidoDTO.setComidaPrecio(pedido.getComida().getPrecio());
+                pedidoDTO.setComidaImagen(pedido.getComida().getImagen());
                 pedidosDTO.add(pedidoDTO);
             }
             carritoDTO.setPedidos(pedidosDTO);
 
+            // Si se creó un nuevo carrito, devolver 201 Created
+            if (creado) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(carritoDTO);
+            }
+
+            // Si ya existía, devolver 200 OK
             return ResponseEntity.ok(carritoDTO);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al obtener el carrito activo.");
+                    .body("Error al obtener o crear el carrito activo.");
         }
     }
 
@@ -63,15 +89,34 @@ public class CarritoController {
             @RequestParam Integer cantidad        // Recibe cantidad
     ) {
         try {
+            // Agregar el pedido al carrito usando el servicio
             Pedido pedidoAgregado = carritoService.agregarPedidoACarrito(carritoId, comidaId, cantidad);
-            return ResponseEntity.ok(pedidoAgregado); // Devuelve el carrito actualizado
+
+            ComidaResponseDTO comidaAgregada = comidaService.obtenerComidaPorId(comidaId);
+
+            // Mapear a PedidoResponseDTO
+            PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
+                    carritoId,
+                    pedidoAgregado.getComida().getId(),
+                    pedidoAgregado.getCantidad(),
+                    comidaAgregada.getNombre(),
+                    comidaAgregada.getPrecio(),
+                    comidaAgregada.getImagen()
+            );
+
+            // Devolver el DTO como respuesta exitosa
+            return ResponseEntity.ok(pedidoDTO);
+
         } catch (RuntimeException e) {
+            // Manejar excepciones específicas
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
+            // Manejar errores generales
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor.");
         }
     }
+
 
     //Obtener los pedidos de un carrito
     @GetMapping("/{carritoId}/pedidos")
@@ -108,9 +153,32 @@ public class CarritoController {
             @RequestParam Integer nuevaCantidad // Nueva cantidad para el pedido
     ) {
         try {
-            // Llamar al servicio para modificar la cantidad
+            // Modificar el pedido en el carrito
             Carrito carritoActualizado = carritoService.modificarCantidadPedidoEnCarrito(carritoId, pedidoId, nuevaCantidad);
-            return ResponseEntity.ok(carritoActualizado); // Devolver el carrito actualizado
+
+            // Buscar el pedido actualizado en el carrito
+            Pedido pedidoActualizado = carritoActualizado.getPedidos().stream()
+                    .filter(p -> p.getId().equals(pedidoId)) // Filtra por el ID del pedido
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Pedido no encontrado después de actualizarlo."));
+
+            ComidaResponseDTO comidaAgregada = comidaService.obtenerComidaPorId(pedidoActualizado.getComida().getId());
+
+            // Mapear al DTO
+            PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
+                    carritoActualizado.getId(),
+                    pedidoActualizado.getComida().getId(),
+                    pedidoActualizado.getCantidad(),
+                    comidaAgregada.getNombre(),
+                    comidaAgregada.getPrecio(),
+                    comidaAgregada.getImagen()
+
+
+            );
+
+            // Devolver el DTO como respuesta exitosa
+            return ResponseEntity.ok(pedidoDTO);
+
         } catch (RuntimeException e) {
             // Manejar errores específicos
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -120,6 +188,7 @@ public class CarritoController {
                     .body("Error interno del servidor.");
         }
     }
+
 
     // Eliminar un pedido del carrito
     @DeleteMapping("/{carritoId}/eliminar-pedido/{pedidoId}")

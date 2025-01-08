@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import uv.uberEats.dtos.EstablecimientoComidasResponseDTO;
+import uv.uberEats.dtos.EstablecimientoDTO;
 import uv.uberEats.dtos.EstablecimientoResponseDTO;
 import uv.uberEats.models.Establecimiento;
 import uv.uberEats.services.EstablecimientoService;
@@ -17,26 +19,28 @@ public class EstablecimientoController {
     @Autowired
     EstablecimientoService establecimientoService;
 
-    //Obtener todos
-    // Obtener lista de establecimientos con búsqueda opcional por nombre
     @GetMapping
-    public List<EstablecimientoResponseDTO> getListaEstablecimientos(@RequestParam(required = false) String nombre) {
+    public ResponseEntity<List<EstablecimientoResponseDTO>> getListaEstablecimientos(@RequestParam(required = false) String nombre) {
+        // Si no se proporciona un nombre, busca todos
         if (nombre == null || nombre.isEmpty()) {
-            return establecimientoService.obtenerTodos();
+            List<EstablecimientoResponseDTO> establecimientos = establecimientoService.obtenerTodos();
+            return ResponseEntity.ok(establecimientos);
         }
-        return establecimientoService.obtenerPorNombre(nombre);
+        // Si se proporciona un nombre, realiza la búsqueda filtrada
+        List<EstablecimientoResponseDTO> establecimientos = establecimientoService.obtenerPorNombre(nombre);
+        return ResponseEntity.ok(establecimientos);
     }
 
 
-    // Buscar uno con ID
+    // Buscar uno con ID este es el getDetails
     @GetMapping("/{id}")
-    public ResponseEntity<?> getEstablecimientoPorId(@PathVariable Long id) {
+    public ResponseEntity<?> getEstablecimientoPorId(@PathVariable Integer id) {
         try {
-            // Buscar por ID
-            Establecimiento establecimiento = establecimientoService.obtenerPorId(id);
-            return ResponseEntity.ok(establecimiento);
+            // Obtener el DTO con establecimiento y sus comidas
+            EstablecimientoComidasResponseDTO establecimientoComidasDTO = establecimientoService.obtenerEstablecimientoComidasPorId(id);
+            return ResponseEntity.ok(establecimientoComidasDTO);
         } catch (NoSuchElementException e) {
-            // Manejar si no se encuentra
+            // Manejar si no se encuentra el establecimiento
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Establecimiento no encontrado con ID: " + id);
         } catch (Exception e) {
@@ -48,19 +52,25 @@ public class EstablecimientoController {
 
     //Agregar establecimiento
     @PostMapping("/agregar")
-    public ResponseEntity<Establecimiento> agregarEstablecimiento(@RequestBody Establecimiento establecimiento) {
+    public ResponseEntity<EstablecimientoResponseDTO> agregarEstablecimiento(@RequestBody EstablecimientoDTO establecimientoDTO) {
         try {
-            Establecimiento nuevoEstablecimiento = establecimientoService.agregarEstablecimiento(establecimiento);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoEstablecimiento); // Código 201 - Created
+            // Llamada al servicio para agregar el establecimiento
+            EstablecimientoResponseDTO nuevoEstablecimientoDTO = establecimientoService.agregarEstablecimiento(establecimientoDTO);
+
+            // Retorna el DTO con el estado HTTP 201 (Created)
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoEstablecimientoDTO);
         } catch (IllegalArgumentException e) {
+            // En caso de error en la validación o parámetros incorrectos
             return ResponseEntity.badRequest().body(null); // Código 400 - Bad Request
         } catch (Exception e) {
+            // En caso de un error interno
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Código 500 - Server Error
         }
     }
 
+
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<?> eliminarEstablecimiento(@PathVariable Long id) {
+    public ResponseEntity<?> eliminarEstablecimiento(@PathVariable Integer id) {
         try {
             // Llama al servicio para eliminar el establecimiento
             Establecimiento eliminado = establecimientoService.eliminarEstablecimiento(id);
@@ -78,27 +88,13 @@ public class EstablecimientoController {
 
     @PutMapping("/actualizar/{id}")
     public ResponseEntity<?> actualizarEstablecimiento(
-            @PathVariable Long id,
-            @RequestBody Establecimiento establecimiento) {
+            @PathVariable Integer id,
+            @RequestBody EstablecimientoDTO establecimientoDTO) {
         try {
-            // Verificar si el establecimiento existe
-            Establecimiento existente = establecimientoService.obtenerPorId(id);
+            // Llamar al servicio para actualizar el establecimiento
+            EstablecimientoResponseDTO responseDTO = establecimientoService.actualizarEstablecimiento(id, establecimientoDTO);
 
-            // Actualizar datos
-            existente.setNombre(establecimiento.getNombre());
-            existente.setCodigoPostal(establecimiento.getCodigoPostal());
-            existente.setNumero(establecimiento.getNumero());
-            existente.setCalle(establecimiento.getCalle());
-            existente.setPais(establecimiento.getPais());
-            existente.setCiudad(establecimiento.getCiudad());
-            existente.setEstado(establecimiento.getEstado());
-            existente.setLatitud(establecimiento.getLatitud());
-            existente.setLongitud(establecimiento.getLongitud());
-
-            // Guardar cambios
-            Establecimiento actualizado = establecimientoService.actualizarEstablecimiento(existente);
-
-            return ResponseEntity.ok(actualizado); // Código 200 - OK
+            return ResponseEntity.ok(responseDTO); // Código 200 - OK
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Establecimiento no encontrado con ID: " + id); // Código 404 - Not Found

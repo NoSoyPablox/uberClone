@@ -11,4 +11,7 @@ public interface CarritoRepository extends JpaRepository<Carrito, Integer> {
     //Encontrar el carrito activo de un usuario
     @Query("SELECT c FROM Carrito c WHERE c.usuario.id = :usuarioId AND c.estado.nombre = 'Activo'")
     Optional<Carrito> findCarritoActivoByUsuarioId(Integer usuarioId);
+
+    @Query("SELECT c FROM Carrito c WHERE c.usuario.id = :usuarioId AND c.estado.nombre = 'aqui que sea un parametro que se le pase'")
+    Optional<Carrito> findCarritoByUsuarioId(Integer usuarioId);
 }

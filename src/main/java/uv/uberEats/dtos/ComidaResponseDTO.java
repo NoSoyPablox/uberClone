@@ -10,8 +10,10 @@ public class ComidaResponseDTO {
     private byte[] imagen;
     private Double promedioCalificaciones;  // Campo para el promedio de calificaciones
     private Long conteoCalificaciones;
+    private Integer establecimientoId;
+    private String establecimientoNombre;
 
-    public ComidaResponseDTO(Integer id, String nombre, BigDecimal precio, String descripcion, byte[] imagen , Double promedioCalificaciones, Long conteoCalificaciones) {
+    public ComidaResponseDTO(Integer id, String nombre, BigDecimal precio, String descripcion, byte[] imagen , Double promedioCalificaciones, Long conteoCalificaciones, Integer establecimientoId, String establecimientoNombre) {
         this.id = id;
         this.nombre = nombre;
         this.precio = precio;
@@ -19,6 +21,8 @@ public class ComidaResponseDTO {
         this.imagen = imagen;
         this.promedioCalificaciones = promedioCalificaciones;
         this.conteoCalificaciones = conteoCalificaciones;
+        this.establecimientoId = establecimientoId;
+        this.establecimientoNombre = establecimientoNombre;
     }
 
     public Integer getId() {
@@ -75,5 +79,21 @@ public class ComidaResponseDTO {
 
     public void setConteoCalificaciones(Long conteoCalificaciones) {
         this.conteoCalificaciones = conteoCalificaciones;
+    }
+
+    public Integer getEstablecimientoId() {
+        return establecimientoId;
+    }
+
+    public void setEstablecimientoId(Integer establecimientoId) {
+        this.establecimientoId = establecimientoId;
+    }
+
+    public String getEstablecimientoNombre() {
+        return establecimientoNombre;
+    }
+
+    public void setEstablecimientoNombre(String establecimientoNombre) {
+        this.establecimientoNombre = establecimientoNombre;
     }
 }

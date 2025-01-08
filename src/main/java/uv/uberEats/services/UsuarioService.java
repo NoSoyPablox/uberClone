@@ -40,6 +40,4 @@ public class UsuarioService {
 
         return usuarioRepository.save(usuario);
     }
-
-
 }
