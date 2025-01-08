@@ -9,15 +9,18 @@ public class PedidoResponseDTO {
     private String comidaNombre;
     private BigDecimal comidaPrecio;
     private byte[] comidaImagen;
+    private BigDecimal latitudEstablecimiento;
+    private BigDecimal longitudEstablecimiento;
 
-
-    public PedidoResponseDTO(Integer carritoId,Integer comidaId, Integer cantidad, String comidaNombre, BigDecimal comidaPrecio, byte[] comidaImagen) {
+    public PedidoResponseDTO(Integer carritoId,Integer comidaId, Integer cantidad, String comidaNombre, BigDecimal comidaPrecio, byte[] comidaImagen, BigDecimal latitudEstablecimiento, BigDecimal longitudEstablecimiento) {
         this.carritoId = comidaId;
         this.comidaId = comidaId;
         this.cantidad = cantidad;
         this.comidaNombre = comidaNombre;
         this.comidaPrecio = comidaPrecio;
         this.comidaImagen = comidaImagen;
+        this.latitudEstablecimiento = latitudEstablecimiento;
+        this.longitudEstablecimiento = longitudEstablecimiento;
     }
 
     public PedidoResponseDTO()
@@ -71,5 +74,21 @@ public class PedidoResponseDTO {
 
     public void setComidaImagen(byte[] comidaImagen) {
         this.comidaImagen = comidaImagen;
+    }
+
+    public BigDecimal getLatitudEstablecimiento() {
+        return latitudEstablecimiento;
+    }
+
+    public void setLatitudEstablecimiento(BigDecimal latitudEstablecimiento) {
+        this.latitudEstablecimiento = latitudEstablecimiento;
+    }
+
+    public BigDecimal getLongitudEstablecimiento() {
+        return longitudEstablecimiento;
+    }
+
+    public void setLongitudEstablecimiento(BigDecimal longitudEstablecimiento) {
+        this.longitudEstablecimiento = longitudEstablecimiento;
     }
 }

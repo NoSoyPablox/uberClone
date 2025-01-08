@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uv.uberEats.dtos.CarritoResponseDTO;
 import uv.uberEats.dtos.ComidaResponseDTO;
+import uv.uberEats.dtos.EstablecimientoDTO;
 import uv.uberEats.dtos.PedidoResponseDTO;
 import uv.uberEats.models.*;
 import uv.uberEats.services.CarritoService;
 import uv.uberEats.services.ComidaService;
+import uv.uberEats.services.EstablecimientoService;
 import uv.uberEats.services.UsuarioService;
 
 import java.util.*;
@@ -24,6 +26,8 @@ public class CarritoController {
     private UsuarioService usuarioService;
     @Autowired
     private ComidaService comidaService;
+    @Autowired
+    private EstablecimientoService establecimientoService;
 
 
     //Obtener el carrito del usuario Activo
@@ -62,6 +66,8 @@ public class CarritoController {
                 pedidoDTO.setComidaNombre(pedido.getComida().getNombre());
                 pedidoDTO.setComidaPrecio(pedido.getComida().getPrecio());
                 pedidoDTO.setComidaImagen(pedido.getComida().getImagen());
+                pedidoDTO.setLatitudEstablecimiento(pedido.getComida().getEstablecimiento().getLatitud());
+                pedidoDTO.setLongitudEstablecimiento(pedido.getComida().getEstablecimiento().getLongitud());
                 pedidosDTO.add(pedidoDTO);
             }
             carritoDTO.setPedidos(pedidosDTO);
@@ -94,6 +100,8 @@ public class CarritoController {
 
             ComidaResponseDTO comidaAgregada = comidaService.obtenerComidaPorId(comidaId);
 
+            Establecimiento establecimiento = establecimientoService.obtenerPorId(comidaAgregada.getEstablecimientoId());
+
             // Mapear a PedidoResponseDTO
             PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
                     carritoId,
@@ -101,7 +109,9 @@ public class CarritoController {
                     pedidoAgregado.getCantidad(),
                     comidaAgregada.getNombre(),
                     comidaAgregada.getPrecio(),
-                    comidaAgregada.getImagen()
+                    comidaAgregada.getImagen(),
+                    establecimiento.getLatitud(),
+                    establecimiento.getLongitud()
             );
 
             // Devolver el DTO como respuesta exitosa
@@ -164,6 +174,8 @@ public class CarritoController {
 
             ComidaResponseDTO comidaAgregada = comidaService.obtenerComidaPorId(pedidoActualizado.getComida().getId());
 
+            Establecimiento establecimiento = establecimientoService.obtenerPorId(comidaAgregada.getEstablecimientoId());
+
             // Mapear al DTO
             PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
                     carritoActualizado.getId(),
@@ -171,9 +183,9 @@ public class CarritoController {
                     pedidoActualizado.getCantidad(),
                     comidaAgregada.getNombre(),
                     comidaAgregada.getPrecio(),
-                    comidaAgregada.getImagen()
-
-
+                    comidaAgregada.getImagen(),
+                    establecimiento.getLatitud(),
+                    establecimiento.getLongitud()
             );
 
             // Devolver el DTO como respuesta exitosa
