@@ -10,9 +10,10 @@ public class CarritoResponseDTO {
     private Integer usuarioId; // Relación con el usuario (solo el ID)
     private BigDecimal latitud;
     private BigDecimal longitud;
+    private Integer repartidorId;
     private List<PedidoResponseDTO> pedidos;
 
-    public CarritoResponseDTO(Integer id, BigDecimal precioTotal, String estadoNombre, Integer usuarioId, BigDecimal latitud, BigDecimal longitud, List<PedidoResponseDTO> pedidos) {
+    public CarritoResponseDTO(Integer id, BigDecimal precioTotal, String estadoNombre, Integer usuarioId, BigDecimal latitud, BigDecimal longitud, Integer repartidorId, List<PedidoResponseDTO> pedidos) {
         this.id = id;
         this.precioTotal = precioTotal;
         this.estadoNombre = estadoNombre;
@@ -20,6 +21,7 @@ public class CarritoResponseDTO {
         this.latitud = latitud;
         this.longitud = longitud;
         this.pedidos = pedidos;
+        this.repartidorId = repartidorId;
     }
 
     public CarritoResponseDTO()
@@ -81,5 +83,13 @@ public class CarritoResponseDTO {
 
     public void setPedidos(List<PedidoResponseDTO> pedidos) {
         this.pedidos = pedidos;
+    }
+
+    public Integer getRepartidorId() {
+        return repartidorId;
+    }
+
+    public void setRepartidorId(Integer repartidorId) {
+        this.repartidorId = repartidorId;
     }
 }

@@ -9,11 +9,14 @@ import uv.uberEats.dtos.ComidaResponseDTO;
 import uv.uberEats.dtos.EstablecimientoDTO;
 import uv.uberEats.dtos.PedidoResponseDTO;
 import uv.uberEats.models.*;
+import uv.uberEats.repositories.CarritoRepository;
+import uv.uberEats.repositories.EstadoRepository;
 import uv.uberEats.services.CarritoService;
 import uv.uberEats.services.ComidaService;
 import uv.uberEats.services.EstablecimientoService;
 import uv.uberEats.services.UsuarioService;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
@@ -28,6 +31,10 @@ public class CarritoController {
     private ComidaService comidaService;
     @Autowired
     private EstablecimientoService establecimientoService;
+    @Autowired
+    private CarritoRepository carritoRepository;
+    @Autowired
+    private EstadoRepository estadoRepository;
 
 
     //Obtener el carrito del usuario Activo
@@ -55,11 +62,13 @@ public class CarritoController {
             carritoDTO.setPrecioTotal(carrito.getPrecioTotal());
             carritoDTO.setEstadoNombre(carrito.getEstado().getNombre());
             carritoDTO.setUsuarioId(carrito.getUsuario().getId());
+            carritoDTO.setRepartidorId(carrito.getIdRepartidor());
 
             // Mapear los pedidos asociados al carrito
             List<PedidoResponseDTO> pedidosDTO = new ArrayList<>();
             for (Pedido pedido : carrito.getPedidos()) {
                 PedidoResponseDTO pedidoDTO = new PedidoResponseDTO();
+                pedidoDTO.setPedidoId(pedido.getId());
                 pedidoDTO.setCarritoId(carrito.getId());
                 pedidoDTO.setComidaId(pedido.getComida().getId());
                 pedidoDTO.setCantidad(pedido.getCantidad());
@@ -104,6 +113,7 @@ public class CarritoController {
 
             // Mapear a PedidoResponseDTO
             PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
+                    pedidoAgregado.getId(),
                     carritoId,
                     pedidoAgregado.getComida().getId(),
                     pedidoAgregado.getCantidad(),
@@ -141,15 +151,68 @@ public class CarritoController {
         }
     }
 
-    //Cambiar estado a pendiente
     @PutMapping("/{carritoId}/pendiente")
     public ResponseEntity<?> cambiarEstadoApendiente(@PathVariable Integer carritoId) {
         try {
             // Llamar al servicio para cambiar el estado
-            Carrito carritoActualizado = carritoService.cambiarEstadoCarritoApendiente(carritoId);
-            return ResponseEntity.ok(carritoActualizado);  // Devolver el carrito actualizado
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoApendiente(carritoId);
+
+            // Devolver el carrito actualizado como respuesta
+            return ResponseEntity.ok(carritoActualizado);
         } catch (RuntimeException e) {
             // Manejar errores si no se puede cambiar el estado
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            // Manejar errores generales
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error inesperado: " + e.getMessage());
+        }
+    }
+
+    //cambiar carrito a estado aceptado
+    @PutMapping("/{carritoId}/aceptado")
+    public ResponseEntity<?> cambiarEstadoAAceptado(@PathVariable Integer carritoId) {
+        try {
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoAAceptado(carritoId);
+            return ResponseEntity.ok(carritoActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: " + e.getMessage());
+        }
+    }
+
+    //cambiar carrito a estado en transito
+    @PutMapping("/{carritoId}/transito")
+    public ResponseEntity<?> cambiarEstadoAEnTransito(@PathVariable Integer carritoId) {
+        try {
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoAEnTransito(carritoId);
+            return ResponseEntity.ok(carritoActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: " + e.getMessage());
+        }
+    }
+
+    //cambiar carrito a estado aceptado
+    @PutMapping("/{carritoId}/completado")
+    public ResponseEntity<?> cambiarEstadoACompletado(@PathVariable Integer carritoId) {
+        try {
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoACompletado(carritoId);
+            return ResponseEntity.ok(carritoActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: " + e.getMessage());
+        }
+    }
+
+    //cambiar carrito a estado cancelado
+    @PutMapping("/{carritoId}/cancelado")
+    public ResponseEntity<?> cambiarEstadoACancelado(@PathVariable Integer carritoId) {
+        try {
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoACancelado(carritoId);
+            return ResponseEntity.ok(carritoActualizado);
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Error: " + e.getMessage());
         }
@@ -178,6 +241,7 @@ public class CarritoController {
 
             // Mapear al DTO
             PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
+                    pedidoActualizado.getId(),
                     carritoActualizado.getId(),
                     pedidoActualizado.getComida().getId(),
                     pedidoActualizado.getCantidad(),
@@ -217,5 +281,53 @@ public class CarritoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor.");
         }
+    }
+
+    @GetMapping("/pendientes")
+    public ResponseEntity<?> obtenerTodosLosCarritosPendientes() {
+        return carritoService.obtenerCarritosPendientes();
+    }
+
+    //asdsad
+    @GetMapping("/{usuarioId}/pendientes")
+    public ResponseEntity<?> obtenerCarritosPendientesPorUsuario(@PathVariable Integer usuarioId) {
+        return carritoService.obtenerCarritosPendientesPorUsuario(usuarioId);
+    }
+
+    // Endpoint para obtener carritos aceptados de un usuario
+    @GetMapping("/{usuarioId}/aceptados")
+    public ResponseEntity<?> obtenerCarritosAceptadosPorUsuario(@PathVariable Integer usuarioId) {
+        return carritoService.obtenerCarritosAceptadosPorUsuario(usuarioId);
+    }
+
+    @GetMapping("/{usuarioId}/transito")
+    public ResponseEntity<?> obtenerCarritosEnTransitoPorUsuario(@PathVariable Integer usuarioId) {
+        return carritoService.obtenerCarritosEnTransitoPorUsuario(usuarioId);
+    }
+
+    @GetMapping("/{usuarioId}/completados")
+    public ResponseEntity<?> obtenerCarritosCompletadosPorUsuario(@PathVariable Integer usuarioId) {
+        return carritoService.obtenerCarritosCompletadosPorUsuario(usuarioId);
+    }
+
+    @GetMapping("/{usuarioId}/cancelados")
+    public ResponseEntity<?> obtenerCarritosCanceladosPorUsuario(@PathVariable Integer usuarioId) {
+        return carritoService.obtenerCarritosCanceladosPorUsuario(usuarioId);
+    }
+
+    @GetMapping("/repartidor/{repartidorId}/aceptados")
+    public ResponseEntity<?> obtenerCarritosAceptados(@PathVariable Integer repartidorId) {
+        return carritoService.obtenerCarritosAceptadosPorRepartidor(repartidorId);
+    }
+
+    // Endpoint para obtener carritos en tránsito de un repartidor
+    @GetMapping("/repartidor/{repartidorId}/transito")
+    public ResponseEntity<?> obtenerCarritosEnTransito(@PathVariable Integer repartidorId) {
+        return carritoService.obtenerCarritosEnTransitoPorRepartidor(repartidorId);
+    }
+
+    @GetMapping("/repartidor/{repartidorId}/completados")
+    public ResponseEntity<?> obtenerCarritosCompletados(@PathVariable Integer repartidorId) {
+        return carritoService.obtenerCarritosCompletadosPorRepartidor(repartidorId);
     }
 }

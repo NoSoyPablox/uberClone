@@ -14,11 +14,22 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // Endpoint para registrar un nuevo usuario
-    @PostMapping("/registro")
+    // Endpoint para registrar un cliente
+    @PostMapping("/cliente")
     public ResponseEntity<Usuario> registrarUsuario(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
         try {
-            Usuario nuevoUsuario = usuarioService.registrarUsuario(registerUsuarioDTO);
+            Usuario nuevoUsuario = usuarioService.registrarCliente(registerUsuarioDTO);
+            return ResponseEntity.status(201).body(nuevoUsuario); // Retornar el usuario creado con código 201 (creado)
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(null); // Si hay un error, retornar código 400
+        }
+    }
+
+    // Endpoint para registrar un repartidor
+    @PostMapping("/repartidor")
+    public ResponseEntity<Usuario> registrarRepartidor(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
+        try {
+            Usuario nuevoUsuario = usuarioService.registrarRepartidor(registerUsuarioDTO);
             return ResponseEntity.status(201).body(nuevoUsuario); // Retornar el usuario creado con código 201 (creado)
         } catch (Exception e) {
             return ResponseEntity.status(400).body(null); // Si hay un error, retornar código 400

@@ -1,20 +1,25 @@
 package uv.uberEats.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import uv.uberEats.dtos.CarritoResponseDTO;
+import uv.uberEats.dtos.PedidoResponseDTO;
 import uv.uberEats.models.*;
 import uv.uberEats.repositories.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CarritoService {
 
     @Autowired
     private CarritoRepository carritoRepository;
-
     @Autowired
     EstadoRepository estadoRepository;
     @Autowired
@@ -159,7 +164,7 @@ public class CarritoService {
     }
 
     //Cambiar estado a pendiente
-    public Carrito cambiarEstadoCarritoApendiente(Integer carritoId) {
+    public CarritoResponseDTO cambiarEstadoCarritoApendiente(Integer carritoId) {
         // Obtener el carrito por su ID
         Carrito carrito = carritoRepository.findById(carritoId)
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
@@ -171,11 +176,231 @@ public class CarritoService {
         // Buscar el estado "Pendiente" en la base de datos
         Estado estadoPendiente = estadoRepository.findByNombre("Pendiente")
                 .orElseThrow(() -> new RuntimeException("Estado 'Pendiente' no encontrado"));
-
-        // Cambiar el estado del carrito
         carrito.setEstado(estadoPendiente);
 
+        //calcular el total del carrito:
+        BigDecimal total = carrito.getPedidos().stream()
+                .map(pedido -> {
+                    BigDecimal precioComida = pedido.getComida().getPrecio();
+                    Integer cantidad = pedido.getCantidad();
+                    return precioComida.multiply(BigDecimal.valueOf(cantidad));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        carrito.setPrecioTotal(total);
         // Guardar los cambios
-        return carritoRepository.save(carrito);
+        carrito = carritoRepository.save(carrito);
+
+        return mapearCarrito(carrito);
+    }
+
+    private CarritoResponseDTO cambiarEstadoCarrito(Integer carritoId, String nuevoEstado) {
+        // Obtener el carrito por su ID
+        Carrito carrito = carritoRepository.findById(carritoId)
+                .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
+
+        // Buscar el estado deseado en la base de datos
+        Estado estado = estadoRepository.findByNombre(nuevoEstado)
+                .orElseThrow(() -> new RuntimeException("Estado '" + nuevoEstado + "' no encontrado"));
+
+        // Actualizar el estado del carrito
+        carrito.setEstado(estado);
+
+        // Guardar los cambios
+        Carrito carritoActualizado = carritoRepository.save(carrito);
+
+        // Mapear el carrito actualizado a DTO
+        return mapearCarrito(carritoActualizado);
+    }
+
+    // Cambiar carrito a estado aceptado
+    public CarritoResponseDTO cambiarEstadoCarritoAAceptado(Integer carritoId) {
+        return cambiarEstadoCarrito(carritoId, "Aceptado");
+    }
+
+    // Cambiar carrito a estado en tránsito
+    public CarritoResponseDTO cambiarEstadoCarritoAEnTransito(Integer carritoId) {
+        return cambiarEstadoCarrito(carritoId, "En transito");
+    }
+
+    // Cambiar carrito a estado completado
+    public CarritoResponseDTO cambiarEstadoCarritoACompletado(Integer carritoId) {
+        return cambiarEstadoCarrito(carritoId, "Completado");
+    }
+
+    // Cambiar carrito a estado cancelado
+    public CarritoResponseDTO cambiarEstadoCarritoACancelado(Integer carritoId) {
+        return cambiarEstadoCarrito(carritoId, "Cancelado");
+    }
+
+    public ResponseEntity<?> obtenerCarritosPendientes() {
+        try {
+            // Obtener todos los carritos en estado "Pendiente"
+            List<Carrito> carritosPendientes = carritoRepository.findCarritosPendientes();
+
+            if (carritosPendientes.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No hay carritos en estado 'Pendiente'.");
+            }
+
+            // Mapear los carritos a DTOs
+            List<CarritoResponseDTO> responseDTOs = carritosPendientes.stream()
+                    .map(carrito -> new CarritoResponseDTO(
+                            carrito.getId(),
+                            carrito.getPrecioTotal(),
+                            carrito.getEstado().getNombre(),
+                            carrito.getUsuario().getId(),
+                            carrito.getLatitud(),
+                            carrito.getLongitud(),
+                            carrito.getIdRepartidor() != null ? carrito.getIdRepartidor() : null,
+                            carrito.getPedidos().stream()
+                                    .map(pedido -> new PedidoResponseDTO(
+                                            pedido.getId(),
+                                            carrito.getId(),
+                                            pedido.getComida().getId(),
+                                            pedido.getCantidad(),
+                                            pedido.getComida().getNombre(),
+                                            pedido.getComida().getPrecio(),
+                                            pedido.getComida().getImagen(),
+                                            pedido.getComida().getEstablecimiento().getLatitud(),
+                                            pedido.getComida().getEstablecimiento().getLongitud()
+                                    ))
+                                    .toList()
+                    ))
+                    .toList();
+
+            // Devolver la lista de DTOs con estado 200
+            return ResponseEntity.ok(responseDTOs);
+
+        } catch (Exception e) {
+            // Manejar errores inesperados
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor.");
+        }
+    }
+
+    public ResponseEntity<?> obtenerCarritosPendientesPorUsuario(Integer usuarioId) {
+        List<Carrito> carritos = carritoRepository.findCarritosPendientesByUsuarioId(usuarioId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    // Obtener todos los carritos aceptados de un usuario
+    public ResponseEntity<?> obtenerCarritosAceptadosPorUsuario(Integer usuarioId) {
+        List<Carrito> carritos = carritoRepository.findCarritosAceptadosByUsuarioId(usuarioId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> obtenerCarritosEnTransitoPorUsuario(Integer usuarioId) {
+        List<Carrito> carritos = carritoRepository.findCarritosEnTransitoByUsuarioId(usuarioId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> obtenerCarritosCompletadosPorUsuario(Integer usuarioId) {
+        List<Carrito> carritos = carritoRepository.findCarritosCompletadosByUsuarioId(usuarioId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> obtenerCarritosCanceladosPorUsuario(Integer usuarioId) {
+        List<Carrito> carritos = carritoRepository.findCarritosCanceladosByUsuarioId(usuarioId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    // Obtener todos los carritos aceptados de un repartidor
+    public ResponseEntity<?> obtenerCarritosAceptadosPorRepartidor(Integer repartidorId) {
+        List<Carrito> carritos = carritoRepository.findCarritosAceptadosByRepartidor(repartidorId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    // Obtener todos los carritos en tránsito de un repartidor
+    public ResponseEntity<?> obtenerCarritosEnTransitoPorRepartidor(Integer repartidorId) {
+        List<Carrito> carritos = carritoRepository.findCarritosEnTransitoByRepartidor(repartidorId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+    // Obtener todos los carritos completados de un repartidor
+    public ResponseEntity<?> obtenerCarritosCompletadosPorRepartidor(Integer repartidorId) {
+        List<Carrito> carritos = carritoRepository.findCarritosCompletadosByRepartidor(repartidorId);
+        if (carritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<CarritoResponseDTO> response = mapearCarritos(carritos);
+        return ResponseEntity.ok(response);
+    }
+
+
+    private List<CarritoResponseDTO> mapearCarritos(List<Carrito> carritos) {
+        return carritos.stream().map(carrito -> new CarritoResponseDTO(
+                carrito.getId(),
+                carrito.getPrecioTotal(),
+                carrito.getEstado().getNombre(),
+                carrito.getUsuario().getId(),
+                carrito.getLatitud(),
+                carrito.getLongitud(),
+                carrito.getIdRepartidor(),
+                carrito.getPedidos().stream()
+                        .map(pedido -> new PedidoResponseDTO(
+                                pedido.getId(),
+                                carrito.getId(),
+                                pedido.getComida().getId(),
+                                pedido.getCantidad(),
+                                pedido.getComida().getNombre(),
+                                pedido.getComida().getPrecio(),
+                                pedido.getComida().getImagen(),
+                                pedido.getComida().getEstablecimiento().getLatitud(),
+                                pedido.getComida().getEstablecimiento().getLongitud()
+                        ))
+                        .toList()
+        )).collect(Collectors.toList());
+    }
+
+    private CarritoResponseDTO mapearCarrito(Carrito carrito) {
+        return new CarritoResponseDTO(
+                carrito.getId(),
+                carrito.getPrecioTotal(),
+                carrito.getEstado().getNombre(),
+                carrito.getUsuario().getId(),
+                carrito.getLatitud(),
+                carrito.getLongitud(),
+                carrito.getIdRepartidor(),
+                carrito.getPedidos().stream()
+                        .map(pedido -> new PedidoResponseDTO(
+                                pedido.getId(),
+                                carrito.getId(),
+                                pedido.getComida().getId(),
+                                pedido.getCantidad(),
+                                pedido.getComida().getNombre(),
+                                pedido.getComida().getPrecio(),
+                                pedido.getComida().getImagen(),
+                                pedido.getComida().getEstablecimiento().getLatitud(),
+                                pedido.getComida().getEstablecimiento().getLongitud()
+                        ))
+                        .toList()
+        );
     }
 }

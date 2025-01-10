@@ -25,7 +25,7 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Usuario registrarUsuario(RegisterUsuarioDTO input){
+    public Usuario registrarCliente(RegisterUsuarioDTO input){
 
         TipoUsuario tipoUsuario = tipoUsuarioService.getTipoUsuario("Cliente");
 
@@ -36,7 +36,21 @@ public class UsuarioService {
         usuario.setCorreo(input.getCorreo());
         usuario.setContrasenia(passwordEncoder.encode(input.getContrasenia()));
         usuario.setTipoUsuario(tipoUsuario);
-        //Tengo que hacer que recupere el rol "Usuario" y ponerselo
+
+        return usuarioRepository.save(usuario);
+    }
+
+    public Usuario registrarRepartidor(RegisterUsuarioDTO input){
+
+        TipoUsuario tipoUsuario = tipoUsuarioService.getTipoUsuario("Repartidor");
+
+        Usuario usuario = new Usuario();
+        usuario.setNombre(input.getNombre());
+        usuario.setApellidoPaterno(input.getApellidoPaterno());
+        usuario.setApellidoMaterno(input.getApellidoMaterno());
+        usuario.setCorreo(input.getCorreo());
+        usuario.setContrasenia(passwordEncoder.encode(input.getContrasenia()));
+        usuario.setTipoUsuario(tipoUsuario);
 
         return usuarioRepository.save(usuario);
     }

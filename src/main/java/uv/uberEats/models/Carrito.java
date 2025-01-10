@@ -32,6 +32,9 @@ public class Carrito {
     @Column(name = "longitud", nullable = false, precision = 11, scale = 8)
     private BigDecimal longitud;
 
+    @Column(name = "id_repartidor", nullable = true)
+    private Integer idRepartidor;
+
     @OneToMany(mappedBy = "carrito")
     @JsonManagedReference
     private Set<uv.uberEats.models.Pedido> pedidos = new LinkedHashSet<>();
@@ -82,6 +85,14 @@ public class Carrito {
 
     public void setLongitud(BigDecimal longitud) {
         this.longitud = longitud;
+    }
+
+    public Integer getIdRepartidor() {
+        return idRepartidor;
+    }
+
+    public void setIdRepartidor(Integer idRepartidor) {
+        this.idRepartidor = idRepartidor;
     }
 
     public Set<uv.uberEats.models.Pedido> getPedidos() {

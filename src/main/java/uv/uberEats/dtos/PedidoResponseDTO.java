@@ -3,6 +3,7 @@ package uv.uberEats.dtos;
 import java.math.BigDecimal;
 
 public class PedidoResponseDTO {
+    private Integer pedidoId;
     private Integer carritoId;
     private Integer comidaId;
     private Integer cantidad;
@@ -12,8 +13,9 @@ public class PedidoResponseDTO {
     private BigDecimal latitudEstablecimiento;
     private BigDecimal longitudEstablecimiento;
 
-    public PedidoResponseDTO(Integer carritoId,Integer comidaId, Integer cantidad, String comidaNombre, BigDecimal comidaPrecio, byte[] comidaImagen, BigDecimal latitudEstablecimiento, BigDecimal longitudEstablecimiento) {
-        this.carritoId = comidaId;
+    public PedidoResponseDTO(Integer pedidoId, Integer carritoId, Integer comidaId, Integer cantidad, String comidaNombre, BigDecimal comidaPrecio, byte[] comidaImagen, BigDecimal latitudEstablecimiento, BigDecimal longitudEstablecimiento) {
+        this.pedidoId = pedidoId;
+        this.carritoId = carritoId;
         this.comidaId = comidaId;
         this.cantidad = cantidad;
         this.comidaNombre = comidaNombre;
@@ -26,6 +28,14 @@ public class PedidoResponseDTO {
     public PedidoResponseDTO()
     {
 
+    }
+
+    public Integer getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(Integer pedidoId) {
+        this.pedidoId = pedidoId;
     }
 
     public Integer getCarritoId() {
