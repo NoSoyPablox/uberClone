@@ -1,9 +1,11 @@
 package uv.uberEats.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uv.uberEats.dtos.RegisterUsuarioDTO;
+import uv.uberEats.dtos.RegisterUsuarioResponseDTO;
 import uv.uberEats.models.Usuario;
 import uv.uberEats.services.UsuarioService;
 
@@ -16,23 +18,25 @@ public class UsuarioController {
 
     // Endpoint para registrar un cliente
     @PostMapping("/cliente")
-    public ResponseEntity<Usuario> registrarUsuario(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
+    public ResponseEntity<?> registrarCliente(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
         try {
-            Usuario nuevoUsuario = usuarioService.registrarCliente(registerUsuarioDTO);
-            return ResponseEntity.status(201).body(nuevoUsuario); // Retornar el usuario creado con código 201 (creado)
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(null); // Si hay un error, retornar código 400
+            RegisterUsuarioResponseDTO nuevoUsuario = usuarioService.registrarCliente(registerUsuarioDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario); // Retornar el DTO creado con código 201
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage()); // Manejar errores y retornar mensaje
         }
     }
 
     // Endpoint para registrar un repartidor
     @PostMapping("/repartidor")
-    public ResponseEntity<Usuario> registrarRepartidor(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
+    public ResponseEntity<?> registrarRepartidor(@RequestBody RegisterUsuarioDTO registerUsuarioDTO) {
         try {
-            Usuario nuevoUsuario = usuarioService.registrarRepartidor(registerUsuarioDTO);
-            return ResponseEntity.status(201).body(nuevoUsuario); // Retornar el usuario creado con código 201 (creado)
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(null); // Si hay un error, retornar código 400
+            RegisterUsuarioResponseDTO nuevoUsuario = usuarioService.registrarRepartidor(registerUsuarioDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario); // Retornar el DTO creado con código 201
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage()); // Manejar errores y retornar mensaje
         }
     }
 

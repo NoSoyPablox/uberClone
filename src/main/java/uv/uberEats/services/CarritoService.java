@@ -30,8 +30,10 @@ public class CarritoService {
     private PedidoRepository pedidoRepository;
 
     //Obtener carrito activo del usuario
-    public Optional<Carrito> obtenerCarritoActivoPorUsuario(Integer usuarioId) {
-        return carritoRepository.findCarritoActivoByUsuarioId(usuarioId);
+    public Carrito obtenerOCrearCarritoActivoPorUsuario(Integer usuarioId) {
+        // Intentar obtener el carrito activo
+        return carritoRepository.findCarritoActivoByUsuarioId(usuarioId)
+                .orElseGet(() -> crearCarrito(usuarioId)); // Crear si no existe
     }
 
     public Carrito crearCarrito(Integer usuarioId)
@@ -59,10 +61,9 @@ public class CarritoService {
     }
 
     //Agregar pedido a carrito dado un id de carrito (pedido tiene cantidad, carrito y comida asociada)
-    public Pedido agregarPedidoACarrito(Integer carritoId, Integer comidaId, Integer cantidad){
-        // Validar el carrito
-        Carrito carrito = carritoRepository.findById(carritoId)
-                .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
+    public Pedido agregarPedidoACarrito(Integer usuarioId, Integer comidaId, Integer cantidad) {
+        // Obtener o crear el carrito activo del usuario
+        Carrito carrito = obtenerOCrearCarritoActivoPorUsuario(usuarioId);
 
         if (!carrito.getEstado().getNombre().equals("Activo")) {
             throw new RuntimeException("El carrito no está activo");

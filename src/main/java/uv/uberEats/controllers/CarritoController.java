@@ -18,6 +18,7 @@ import uv.uberEats.services.UsuarioService;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/carritos")
@@ -41,20 +42,8 @@ public class CarritoController {
     @GetMapping("activo/{usuarioId}")
     public ResponseEntity<?> obtenerCarritoActivo(@PathVariable Integer usuarioId) {
         try {
-            // Verificar si existe un carrito activo para el usuario
-            Optional<Carrito> carritoOpt = carritoService.obtenerCarritoActivoPorUsuario(usuarioId);
-
-            Carrito carrito;
-            boolean creado = false; // Bandera para verificar si se creó un nuevo carrito
-
-            if (carritoOpt.isEmpty()) {
-                // Si no existe, intentar crearlo
-                carrito = carritoService.crearCarrito(usuarioId);
-                creado = true; // Marcar que se creó un carrito
-            } else {
-                // Si ya existe, obtenerlo
-                carrito = carritoOpt.get();
-            }
+            // Usar el servicio para obtener o crear el carrito activo
+            Carrito carrito = carritoService.obtenerOCrearCarritoActivoPorUsuario(usuarioId);
 
             // Mapear la información a CarritoResponseDTO
             CarritoResponseDTO carritoDTO = new CarritoResponseDTO();
@@ -65,8 +54,7 @@ public class CarritoController {
             carritoDTO.setRepartidorId(carrito.getIdRepartidor());
 
             // Mapear los pedidos asociados al carrito
-            List<PedidoResponseDTO> pedidosDTO = new ArrayList<>();
-            for (Pedido pedido : carrito.getPedidos()) {
+            List<PedidoResponseDTO> pedidosDTO = carrito.getPedidos().stream().map(pedido -> {
                 PedidoResponseDTO pedidoDTO = new PedidoResponseDTO();
                 pedidoDTO.setPedidoId(pedido.getId());
                 pedidoDTO.setCarritoId(carrito.getId());
@@ -77,18 +65,16 @@ public class CarritoController {
                 pedidoDTO.setComidaImagen(pedido.getComida().getImagen());
                 pedidoDTO.setLatitudEstablecimiento(pedido.getComida().getEstablecimiento().getLatitud());
                 pedidoDTO.setLongitudEstablecimiento(pedido.getComida().getEstablecimiento().getLongitud());
-                pedidosDTO.add(pedidoDTO);
-            }
+                return pedidoDTO;
+            }).collect(Collectors.toList());
+
             carritoDTO.setPedidos(pedidosDTO);
 
-            // Si se creó un nuevo carrito, devolver 201 Created
-            if (creado) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(carritoDTO);
-            }
-
-            // Si ya existía, devolver 200 OK
+            // Devolver el DTO con código 200 OK
             return ResponseEntity.ok(carritoDTO);
 
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al obtener o crear el carrito activo.");
@@ -97,15 +83,15 @@ public class CarritoController {
 
 
     //Agregar un pedido al carrito
-    @PostMapping("/{carritoId}/agregar-pedido")
+    @PostMapping("/agregar-pedido")
     public ResponseEntity<?> agregarPedido(
-            @PathVariable Integer carritoId,
-            @RequestParam Integer comidaId,       // Recibe ID de la comida
-            @RequestParam Integer cantidad        // Recibe cantidad
+            @RequestParam Integer usuarioId,       // Recibe ID del usuario
+            @RequestParam Integer comidaId,        // Recibe ID de la comida
+            @RequestParam Integer cantidad         // Recibe cantidad
     ) {
         try {
             // Agregar el pedido al carrito usando el servicio
-            Pedido pedidoAgregado = carritoService.agregarPedidoACarrito(carritoId, comidaId, cantidad);
+            Pedido pedidoAgregado = carritoService.agregarPedidoACarrito(usuarioId, comidaId, cantidad);
 
             ComidaResponseDTO comidaAgregada = comidaService.obtenerComidaPorId(comidaId);
 
@@ -114,7 +100,7 @@ public class CarritoController {
             // Mapear a PedidoResponseDTO
             PedidoResponseDTO pedidoDTO = new PedidoResponseDTO(
                     pedidoAgregado.getId(),
-                    carritoId,
+                    pedidoAgregado.getCarrito().getId(),
                     pedidoAgregado.getComida().getId(),
                     pedidoAgregado.getCantidad(),
                     comidaAgregada.getNombre(),
