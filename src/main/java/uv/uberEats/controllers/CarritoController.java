@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uv.uberEats.dtos.CarritoResponseDTO;
-import uv.uberEats.dtos.ComidaResponseDTO;
-import uv.uberEats.dtos.EstablecimientoDTO;
-import uv.uberEats.dtos.PedidoResponseDTO;
+import uv.uberEats.dtos.*;
 import uv.uberEats.models.*;
 import uv.uberEats.repositories.CarritoRepository;
 import uv.uberEats.repositories.EstadoRepository;
@@ -138,19 +135,21 @@ public class CarritoController {
     }
 
     @PutMapping("/{carritoId}/pendiente")
-    public ResponseEntity<?> cambiarEstadoApendiente(@PathVariable Integer carritoId) {
+    public ResponseEntity<?> cambiarEstadoApendiente(
+            @PathVariable Integer carritoId,
+            @RequestBody CarritoPendienteDTO carritoPendienteDTO) {
         try {
-            // Llamar al servicio para cambiar el estado
-            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoApendiente(carritoId);
-
-            // Devolver el carrito actualizado como respuesta
+            // Llamar al servicio con las coordenadas
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoApendiente(
+                    carritoId,
+                    carritoPendienteDTO.getLatitud(),
+                    carritoPendienteDTO.getLongitud()
+            );
             return ResponseEntity.ok(carritoActualizado);
         } catch (RuntimeException e) {
-            // Manejar errores si no se puede cambiar el estado
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Error: " + e.getMessage());
         } catch (Exception e) {
-            // Manejar errores generales
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error inesperado: " + e.getMessage());
         }
@@ -158,9 +157,9 @@ public class CarritoController {
 
     //cambiar carrito a estado aceptado
     @PutMapping("/{carritoId}/aceptado")
-    public ResponseEntity<?> cambiarEstadoAAceptado(@PathVariable Integer carritoId) {
+    public ResponseEntity<?> cambiarEstadoAAceptado(@PathVariable Integer carritoId, @RequestParam Integer repartidorId) {
         try {
-            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoAAceptado(carritoId);
+            CarritoResponseDTO carritoActualizado = carritoService.cambiarEstadoCarritoAAceptado(carritoId, repartidorId);
             return ResponseEntity.ok(carritoActualizado);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

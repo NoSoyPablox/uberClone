@@ -165,7 +165,7 @@ public class CarritoService {
     }
 
     //Cambiar estado a pendiente
-    public CarritoResponseDTO cambiarEstadoCarritoApendiente(Integer carritoId) {
+    public CarritoResponseDTO cambiarEstadoCarritoApendiente(Integer carritoId, BigDecimal latitud, BigDecimal longitud) {
         // Obtener el carrito por su ID
         Carrito carrito = carritoRepository.findById(carritoId)
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
@@ -178,6 +178,12 @@ public class CarritoService {
         Estado estadoPendiente = estadoRepository.findByNombre("Pendiente")
                 .orElseThrow(() -> new RuntimeException("Estado 'Pendiente' no encontrado"));
         carrito.setEstado(estadoPendiente);
+
+        // Actualizar latitud y longitud si se proporcionan
+        if (latitud != null && longitud != null) {
+            carrito.setLatitud(latitud);
+            carrito.setLongitud(longitud);
+        }
 
         //calcular el total del carrito:
         BigDecimal total = carrito.getPedidos().stream()
@@ -215,8 +221,22 @@ public class CarritoService {
     }
 
     // Cambiar carrito a estado aceptado
-    public CarritoResponseDTO cambiarEstadoCarritoAAceptado(Integer carritoId) {
-        return cambiarEstadoCarrito(carritoId, "Aceptado");
+    public CarritoResponseDTO cambiarEstadoCarritoAAceptado(Integer carritoId, Integer repartidorId) {
+        Carrito carrito = carritoRepository.findById(carritoId)
+                .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
+
+        // Cambiar estado a Aceptado
+        Estado estado = estadoRepository.findByNombre("Aceptado")
+                .orElseThrow(() -> new RuntimeException("Estado aceptado no encontrado"));
+        carrito.setEstado(estado);
+
+        // Asignar el repartidor
+        carrito.setIdRepartidor(repartidorId);
+
+        // Guardar el carrito actualizado
+        carritoRepository.save(carrito);
+
+        return mapearCarrito(carrito); // Asegúrate de que este DTO tiene los datos correctos.
     }
 
     // Cambiar carrito a estado en tránsito
